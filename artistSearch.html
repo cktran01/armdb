@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+    <title>AR Music Database</title>
+    <meta name="description" content="Arkansas Music Database">
+    <meta name="keywords" content="arkansas, music">
+    <meta name="author" content="Charlie Tran">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="stylesheet" href="assets/style/armdb.css">
+	<link rel="shortcut icon" href="assets/images/arflagicon.png" type="image/x-icon" />
+</head>
+  <body class="artistsearchpage">
+    <div id="container"></div>
+	<h1>Arkansas Music Database</h1>
+	<div class="tab">
+			<button class="tablinks" onclick="location.href='index.html'">Home</button>
+			<button class="tablinks" onclick="location.href='artistBrowse.html'">Browse</button>
+			<button class="tablinks" onclick="location.href='artistSearch.html'">Search</button>
+            <button class="tablinks" onclick="location.href='about.html'">About</button>
+            <button class="tablinks" onclick="location.href='contact.html'">Contact</button>	
+	</div>
+	<br>
+	<h2>Search any artist here by typing their name in the text box.</h2>
+	<input type="text" placeholder="Search Artist..." id="artist">
+	<button onclick="search();">Search</button>
+	<br>
+	<div id="main">
+	<div id="showArtistProfile">
+	<h2>Artist</h2>
+	<div id="artistname"></div>
+	<br>
+	<img id="artistbanner" alt="Artist Banner">
+	<h2>Location</h2>
+	<div id="artistloc"></div>
+    <h2>Artist Biography</h2>
+    <div id="biography"></div>
+	<h2>Album List</h2>
+    <div id="albumlist"></div>
+    <h2>First Album Tracks</h2>
+    <div id="tracklist"></div>
+	</div>
+	</div>
+	
+	
+<script>
+async function search() {
+    // Artist Data
+    // Get the artist name from the textbox; encode the artist name in case there are special characters
+    artistSearchValue = encodeURI(document.getElementById("artist").value);
+    // Create the search URL; Note we are using 2 as the apikey
+    artistSearchURL = "https://theaudiodb.com/api/v1/json/2/search.php?s=" + artistSearchValue;
+    // AJAX call to fetch the data
+    artistObject = await fetch(artistSearchURL);
+    artistJSONText = await artistObject.text();
+    // Parse the JSON string into an object
+    artistData = JSON.parse(artistJSONText);
+	// Hide headers and show when user does a search
+	if (artistData) {
+	var ele = document.getElementById('showArtistProfile');
+		if (ele) {
+		ele.setAttribute("style", "display:block");
+		}
+	}	
+	// Display the artist name
+	document.getElementById("artistname").innerHTML = artistData.artists[0].strArtist;
+	// Display the artist location
+	document.getElementById("artistloc").innerHTML = artistData.artists[0].strCountry;
+    // Display the biography data - Note we display the first result - 0 index
+    document.getElementById("biography").innerHTML = artistData.artists[0].strBiographyEN;
+    // Display the artist picture - Note we display the first result - 0 index; use "/preview" for smaller image
+    document.getElementById("artistbanner").src = artistData.artists[0].strArtistBanner + "/preview";
+	// Album Data - Get the first Album
+    // Get the artist ID from the artist data object; encode the artist ID in case there are special characters
+    albumSearchValue = encodeURI(artistData.artists[0].idArtist);
+    // Create the search URL; Note we are using 1 as the apikey
+    albumSearchURL = "https://theaudiodb.com/api/v1/json/2/album.php?i=" + albumSearchValue;
+    // AJAX call to fetch the data
+    albumObject = await fetch(albumSearchURL);
+    albumJSONText = await albumObject.text();
+    // Parse the JSON string into an object
+    albumData = JSON.parse(albumJSONText);
+    // Loop through the albums
+    albumList = "";
+    for (i = 0; i < albumData.album.length; i++) {
+        albumList = albumList + albumData.album[i].strAlbum + " (" + albumData.album[i].intYearReleased + ")" + "<br>";
+    }
+    // Display the album names
+    document.getElementById("albumlist").innerHTML = albumList;
+
+    // Track Data - Get the tracks for the first album
+    // Get the album ID from the artist data object; encode the album ID in case there are special characters
+    trackSearchValue = encodeURI(albumData.album[0].idAlbum);
+    // Create the search URL; Note we are using 1 as the apikey
+    trackSearchURL = "https://theaudiodb.com/api/v1/json/2/track.php?m=" + trackSearchValue;
+    // AJAX call to fetch the data
+    trackObject = await fetch(trackSearchURL);
+    trackJSONText = await trackObject.text();
+    // Parse the JSON string into an object
+    trackData = JSON.parse(trackJSONText);     
+    trackList = "";
+    for (i = 0; i < trackData.track.length; i++) {
+        trackList = trackList + trackData.track[i].strTrack + "<br>";
+    }
+    // Display the track names for first album
+    document.getElementById("tracklist").innerHTML = trackList;
+} 
+</script>
+</body>
+</html>
